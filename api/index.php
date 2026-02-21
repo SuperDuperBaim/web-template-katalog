@@ -1,27 +1,32 @@
 <?php
 
 /**
- * Handle Vercel's read-only filesystem by overriding the storage path.
- * This ensures that Laravel uses /tmp for caches and logs.
+ * Handle Vercel's read-only filesystem and provide early error reporting.
  */
 
-// Override storage path to /tmp for Vercel
+// Enable error reporting for debugging on Vercel
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 if (isset($_SERVER['VERCEL_URL'])) {
-    if (!is_dir('/tmp/storage/framework/views')) {
-        mkdir('/tmp/storage/framework/views', 0755, true);
+    $storagePath = '/tmp/storage';
+    $directories = [
+        $storagePath . '/framework/views',
+        $storagePath . '/framework/cache',
+        $storagePath . '/framework/sessions',
+        $storagePath . '/logs',
+    ];
+
+    foreach ($directories as $directory) {
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
     }
-    if (!is_dir('/tmp/storage/framework/cache')) {
-        mkdir('/tmp/storage/framework/cache', 0755, true);
-    }
-    if (!is_dir('/tmp/storage/framework/sessions')) {
-        mkdir('/tmp/storage/framework/sessions', 0755, true);
-    }
-    if (!is_dir('/tmp/storage/logs')) {
-        mkdir('/tmp/storage/logs', 0755, true);
-    }
-    
-    // Set the storage path environment variable
-    putenv('APP_STORAGE=/tmp/storage');
+
+    // Force Laravel to use /tmp for storage
+    putenv("APP_STORAGE=$storagePath");
+    $_ENV['APP_STORAGE'] = $storagePath;
 }
 
 require __DIR__ . '/../public/index.php';

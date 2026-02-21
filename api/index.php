@@ -1,16 +1,14 @@
 <?php
 
 /**
- * Handle Vercel's read-only filesystem and provide early error reporting.
+ * Vercel Entry Point
+ * This handles the read-only filesystem by moving storage to /tmp.
  */
-
-// Enable error reporting for debugging on Vercel
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 if (isset($_SERVER['VERCEL_URL'])) {
     $storagePath = '/tmp/storage';
+    
+    // Ensure required directories exist in /tmp
     $directories = [
         $storagePath . '/framework/views',
         $storagePath . '/framework/cache',
@@ -24,7 +22,7 @@ if (isset($_SERVER['VERCEL_URL'])) {
         }
     }
 
-    // Force Laravel to use /tmp for storage
+    // Set environment variables for Laravel
     putenv("APP_STORAGE=$storagePath");
     $_ENV['APP_STORAGE'] = $storagePath;
 }
